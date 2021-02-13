@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Vasylashko | Lab 1</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
+    <script src="./rsg.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.css"
+    />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+
+  <body onload="return fillChart()">
+    <form onsubmit="return fillChart()">
+      <label for="garmonic">Число гармонік в сигналі:</label><br />
+      <input type="number" id="garmonic" name="garmonic" value="10" /><br />
+
+      <label for="limitfrequency">Гранична частота:</label><br />
+      <input
+        type="number"
+        id="limitfrequency"
+        name="limitfrequency"
+        value="900"
+      /><br />
+
+      <label for="discretenumber">Кількість дискретних відліків :</label><br />
+      <input
+        type="number"
+        id="discretenumber"
+        name="discretenumber"
+        value="256"
+      /><br /><br />
+      <input id="submit" type="submit" value="Submit" />
+    </form>
+
+    <p id="average">Математичне сподівання:</p>
+    <p id="dispercy">Дисперсія:</p>
+
+    <canvas id="lineChart"></canvas>
+    <script>
+      function fillChart() {
+        var ctx = document.getElementById("lineChart");
+
+        var n = document.getElementById("garmonic").value;
+        var wl = document.getElementById("limitfrequency").value;
+        var N = document.getElementById("discretenumber").value;
+
+        var pAverage = document.getElementById("average");
+        var pDispercy = document.getElementById("dispercy");
+
+        var signals = generateRandomSignals(n, wl, N);
+
+        pAverage.innerHTML = `Математичне сподівання: ${average(signals)}`;
+        pDispercy.innerHTML = `Дисперсія: ${dispercy(signals)}`;
+
+        var dataset = {
+          label: "x(t)",
+          data: signals,
+          pointRadius: 0,
+          backgroundColor: ["rgba(0, 122, 255, 0.2)"],
+          borderColor: ["rgb(0, 122, 255)"],
+          borderWidth: 1,
+        };
+
+        var labels = signals.map((val, index) => String(index));
+
+        var data = {
+          labels: labels,
+          datasets: [dataset],
+        };
+
+        options = {
+          scales: {
+            xAxes: [
+              {
+                scaleLabel: {
+                  display: true,
+                  labelString: "t",
+                },
+              },
+            ],
+            yAxes: [
+              {
+                scaleLabel: {
+                  display: true,
+                  labelString: "x",
+                },
+              },
+            ],
+          },
+        };
+
+        var myLineChart = new Chart(ctx, {
+          type: "line",
+          data: data,
+          options: options,
+        });
+
+        return false;
+      }
+    </script>
+  </body>
+</html>

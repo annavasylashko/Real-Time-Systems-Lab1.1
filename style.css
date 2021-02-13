@@ -1,0 +1,31 @@
+form {
+  margin-right: 20px;
+}
+
+label,
+p,
+#submit {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  margin-left: 10px;
+}
+
+input {
+  margin-bottom: 10px;
+  margin-left: 10px;
+  padding: 5px;
+}
+
+#submit {
+  width: 172px;
+  text-align: center;
+  background-color: #cce4ff;
+  border: none;
+  border: 1px solid #007aff;
+  border-radius: 3px;
+  outline: none;
+}
+
+#submit:hover {
+  cursor: pointer;
+}
