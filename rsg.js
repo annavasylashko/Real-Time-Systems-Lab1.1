@@ -7,10 +7,10 @@ const generateRandomSignals = (n, wl, N) => {
   for (let i = 1; i <= n; i++) {
     Wp += wl / n;
 
-    let fp = Math.random();
-    let Ap = Math.random();
-
     for (let t = 0; t < N; t++) {
+      let fp = Math.random();
+      let Ap = Math.random();
+
       signals[t] += Ap * Math.sin(Wp * t + fp);
     }
   }
