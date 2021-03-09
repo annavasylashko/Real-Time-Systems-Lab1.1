@@ -37,10 +37,15 @@
     <p id="average">Математичне сподівання:</p>
     <p id="dispercy">Дисперсія:</p>
 
-    <canvas id="lineChart"></canvas>
+    <canvas id="signals"></canvas>
+    <canvas id="autoCorrelation"></canvas>
+    <canvas id="crossCorrelation"></canvas>
+
     <script>
       function fillChart() {
-        var ctx = document.getElementById("lineChart");
+        var ctxSignals = document.getElementById("signals");
+        var ctxAutoCorrelation = document.getElementById("autoCorrelation");
+        var ctxCrossCorrelation = document.getElementById("crossCorrelation");
 
         var n = document.getElementById("garmonic").value;
         var wl = document.getElementById("limitfrequency").value;
@@ -50,11 +55,16 @@
         var pDispercy = document.getElementById("dispercy");
 
         var signals = generateRandomSignals(n, wl, N);
+        var signalsCopy = generateRandomSignals(n, wl, N);
+        var autoCorrelation = correlate(signals, signals);
+        var crossCorrelation = correlate(signals, signalsCopy);
+
+        console.log(autoCorrelation)
 
         pAverage.innerHTML = `Математичне сподівання: ${average(signals)}`;
         pDispercy.innerHTML = `Дисперсія: ${dispercy(signals)}`;
 
-        var dataset = {
+        var signalsXDataset = {
           label: "x(t)",
           data: signals,
           pointRadius: 0,
@@ -63,11 +73,49 @@
           borderWidth: 1,
         };
 
-        var labels = signals.map((val, index) => String(index));
+        var signalsYDataset = {
+          label: "y(t)",
+          data: signalsCopy,
+          pointRadius: 0,
+          backgroundColor: ["rgba(255, 122, 1, 0.2)"],
+          borderColor: ["rgb(255, 122, 1)"],
+          borderWidth: 1,
+        };
 
-        var data = {
+        var autoCorrelationDataset = {
+          label: "Rxx(tau)",
+          data: correlate(signals, signals),
+          pointRadius: 0,
+          backgroundColor: ["rgba(0, 122, 255, 0.2)"],
+          borderColor: ["rgb(0, 122, 255)"],
+          borderWidth: 1,
+        };
+
+        var crossCorrelationDataset = {
+          label: "Rxy(tau)",
+          data: correlate(signals, generateRandomSignals(n, wl, N)),
+          pointRadius: 0,
+          backgroundColor: ["rgba(0, 122, 255, 0.2)"],
+          borderColor: ["rgb(0, 122, 255)"],
+          borderWidth: 1,
+        };
+
+        var labels = signals.map((val, index) => String(index));
+        var correlationLabels = autoCorrelation.map((val, index) => String(index));
+
+        var signalsData = {
           labels: labels,
-          datasets: [dataset],
+          datasets: [signalsXDataset, signalsYDataset],
+        };
+
+        var autoCorrelationData = {
+          labels: correlationLabels,
+          datasets: [autoCorrelationDataset],
+        };
+
+        var crossCorrelationData = {
+          labels: correlationLabels,
+          datasets: [crossCorrelationDataset],
         };
 
         options = {
@@ -91,10 +139,66 @@
           },
         };
 
-        var myLineChart = new Chart(ctx, {
+        autoCorrelationOptions = {
+          scales: {
+            xAxes: [
+              {
+                scaleLabel: {
+                  display: true,
+                  labelString: "tau",
+                },
+              },
+            ],
+            yAxes: [
+              {
+                scaleLabel: {
+                  display: true,
+                  labelString: "Rxx(tau)",
+                },
+              },
+            ],
+          },
+        };
+
+        crossCorrelationOptions = {
+          scales: {
+            xAxes: [
+              {
+                scaleLabel: {
+                  display: true,
+                  labelString: "tau",
+                },
+              },
+            ],
+            yAxes: [
+              {
+                scaleLabel: {
+                  display: true,
+                  labelString: "Rxy(tau)",
+                },
+              },
+            ],
+          },
+        };
+
+        var signalsChart = new Chart(ctxSignals, {
           type: "line",
-          data: data,
+          data: signalsData,
           options: options,
+        });
+
+        console.log(signalsChart)
+
+        var autoCorrelationChart = new Chart(ctxAutoCorrelation, {
+          type: "line",
+          data: autoCorrelationData,
+          options: autoCorrelationOptions,
+        });
+
+        var crossCorrelationChard = new Chart(ctxCrossCorrelation, {
+          type: "line",
+          data: crossCorrelationData,
+          options: crossCorrelationOptions,
         });
 
         return false;

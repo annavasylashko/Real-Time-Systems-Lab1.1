@@ -24,3 +24,22 @@ const dispercy = (signals) => {
   let mx = average(signals);
   return sum(signals.map((xt) => Math.pow(xt - mx, 2))) / (signals.length - 1);
 };
+
+const correlate = (x, y) => {
+  let Mx = average(x)
+  let My = average(y)
+  let n = x.length
+  let N = 128
+
+  let correlation = new Array(N)
+  correlation.fill(0)
+
+  for (let tau = 0; tau < N; tau++) {
+    for (let t = 1; t < n - tau; t++) {
+      correlation[tau] += (x[t] - Mx) * (y[t + tau] - My)
+    }
+    correlation[tau] *= 1/ (n - 1)
+  }
+
+  return correlation
+}
