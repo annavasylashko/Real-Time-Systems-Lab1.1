@@ -1,208 +1,186 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Vasylashko | Lab 1</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
-    <script src="./rsg.js"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.css"
-    />
-    <link rel="stylesheet" href="./style.css" />
-  </head>
 
-  <body onload="return fillChart()">
-    <form onsubmit="return fillChart()">
-      <label for="garmonic">Число гармонік в сигналі:</label><br />
-      <input type="number" id="garmonic" name="garmonic" value="10" /><br />
+<head>
+  <title>Vasylashko | Lab 1</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
+  <script src="./rsg.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.css" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
 
-      <label for="limitfrequency">Гранична частота:</label><br />
-      <input
-        type="number"
-        id="limitfrequency"
-        name="limitfrequency"
-        value="900"
-      /><br />
+<body onload="return fillChart()">
+  <form onsubmit="return fillChart()">
+    <label for="garmonic">Число гармонік в сигналі:</label><br />
+    <input type="number" id="garmonic" name="garmonic" value="10" /><br />
 
-      <label for="discretenumber">Кількість дискретних відліків :</label><br />
-      <input
-        type="number"
-        id="discretenumber"
-        name="discretenumber"
-        value="256"
-      /><br /><br />
-      <input id="submit" type="submit" value="Submit" />
-    </form>
+    <label for="limitfrequency">Гранична частота:</label><br />
+    <input type="number" id="limitfrequency" name="limitfrequency" value="900" /><br />
 
-    <p id="average">Математичне сподівання:</p>
-    <p id="dispercy">Дисперсія:</p>
+    <label for="discretenumber">Кількість дискретних відліків :</label><br />
+    <input type="number" id="discretenumber" name="discretenumber" value="256" /><br /><br />
+    <input id="submit" type="submit" value="Submit" />
+  </form>
 
-    <canvas id="signals"></canvas>
-    <canvas id="autoCorrelation"></canvas>
-    <canvas id="crossCorrelation"></canvas>
+  <p id="average">Математичне сподівання:</p>
+  <p id="dispercy">Дисперсія:</p>
 
-    <script>
-      function fillChart() {
-        var ctxSignals = document.getElementById("signals");
-        var ctxAutoCorrelation = document.getElementById("autoCorrelation");
-        var ctxCrossCorrelation = document.getElementById("crossCorrelation");
+  <canvas id="signals"></canvas>
+  <canvas id="dft"></canvas>
+  <canvas id="fft"></canvas>
 
-        var n = document.getElementById("garmonic").value;
-        var wl = document.getElementById("limitfrequency").value;
-        var N = document.getElementById("discretenumber").value;
+  <script>
+    function fillChart() {
+      var ctxSignals = document.getElementById("signals");
+      var ctxDFT = document.getElementById("dft");
+      var ctxFFT = document.getElementById("fft");
 
-        var pAverage = document.getElementById("average");
-        var pDispercy = document.getElementById("dispercy");
+      var n = document.getElementById("garmonic").value;
+      var wl = document.getElementById("limitfrequency").value;
+      var N = document.getElementById("discretenumber").value;
 
-        var signals = generateRandomSignals(n, wl, N);
-        var signalsCopy = generateRandomSignals(n, wl, N);
-        var autoCorrelation = correlate(signals, signals);
-        var crossCorrelation = correlate(signals, signalsCopy);
+      var pAverage = document.getElementById("average");
+      var pDispercy = document.getElementById("dispercy");
 
-        console.log(autoCorrelation)
+      var signals = generateRandomSignals(n, wl, N);
+      var dfts = dft(signals.slice()).map((complexNumber) => Math.sqrt(complexNumber.real ** 2 + complexNumber.imag ** 2))
+      var ffts = fft(signals.slice()).map((complexNumber) => Math.sqrt(complexNumber.real ** 2 + complexNumber.imag ** 2))
 
-        pAverage.innerHTML = `Математичне сподівання: ${average(signals)}`;
-        pDispercy.innerHTML = `Дисперсія: ${dispercy(signals)}`;
+      console.log(dfts)
+      console.log(ffts)
 
-        var signalsXDataset = {
-          label: "x(t)",
-          data: signals,
-          pointRadius: 0,
-          backgroundColor: ["rgba(0, 122, 255, 0.2)"],
-          borderColor: ["rgb(0, 122, 255)"],
-          borderWidth: 1,
-        };
+      pAverage.innerHTML = `Математичне сподівання: ${average(signals)}`;
+      pDispercy.innerHTML = `Дисперсія: ${dispercy(signals)}`;
 
-        var signalsYDataset = {
-          label: "y(t)",
-          data: signalsCopy,
-          pointRadius: 0,
-          backgroundColor: ["rgba(255, 122, 1, 0.2)"],
-          borderColor: ["rgb(255, 122, 1)"],
-          borderWidth: 1,
-        };
+      var signalsXDataset = {
+        label: "x(t)",
+        data: signals,
+        pointRadius: 0,
+        backgroundColor: ["rgba(0, 122, 255, 0.2)"],
+        borderColor: ["rgb(0, 122, 255)"],
+        borderWidth: 1,
+      };
 
-        var autoCorrelationDataset = {
-          label: "Rxx(tau)",
-          data: correlate(signals, signals),
-          pointRadius: 0,
-          backgroundColor: ["rgba(0, 122, 255, 0.2)"],
-          borderColor: ["rgb(0, 122, 255)"],
-          borderWidth: 1,
-        };
-
-        var crossCorrelationDataset = {
-          label: "Rxy(tau)",
-          data: correlate(signals, generateRandomSignals(n, wl, N)),
-          pointRadius: 0,
-          backgroundColor: ["rgba(0, 122, 255, 0.2)"],
-          borderColor: ["rgb(0, 122, 255)"],
-          borderWidth: 1,
-        };
-
-        var labels = signals.map((val, index) => String(index));
-        var correlationLabels = autoCorrelation.map((val, index) => String(index));
-
-        var signalsData = {
-          labels: labels,
-          datasets: [signalsXDataset, signalsYDataset],
-        };
-
-        var autoCorrelationData = {
-          labels: correlationLabels,
-          datasets: [autoCorrelationDataset],
-        };
-
-        var crossCorrelationData = {
-          labels: correlationLabels,
-          datasets: [crossCorrelationDataset],
-        };
-
-        options = {
-          scales: {
-            xAxes: [
-              {
-                scaleLabel: {
-                  display: true,
-                  labelString: "t",
-                },
-              },
-            ],
-            yAxes: [
-              {
-                scaleLabel: {
-                  display: true,
-                  labelString: "x",
-                },
-              },
-            ],
-          },
-        };
-
-        autoCorrelationOptions = {
-          scales: {
-            xAxes: [
-              {
-                scaleLabel: {
-                  display: true,
-                  labelString: "tau",
-                },
-              },
-            ],
-            yAxes: [
-              {
-                scaleLabel: {
-                  display: true,
-                  labelString: "Rxx(tau)",
-                },
-              },
-            ],
-          },
-        };
-
-        crossCorrelationOptions = {
-          scales: {
-            xAxes: [
-              {
-                scaleLabel: {
-                  display: true,
-                  labelString: "tau",
-                },
-              },
-            ],
-            yAxes: [
-              {
-                scaleLabel: {
-                  display: true,
-                  labelString: "Rxy(tau)",
-                },
-              },
-            ],
-          },
-        };
-
-        var signalsChart = new Chart(ctxSignals, {
-          type: "line",
-          data: signalsData,
-          options: options,
-        });
-
-        console.log(signalsChart)
-
-        var autoCorrelationChart = new Chart(ctxAutoCorrelation, {
-          type: "line",
-          data: autoCorrelationData,
-          options: autoCorrelationOptions,
-        });
-
-        var crossCorrelationChard = new Chart(ctxCrossCorrelation, {
-          type: "line",
-          data: crossCorrelationData,
-          options: crossCorrelationOptions,
-        });
-
-        return false;
+      var dftDataset = {
+        label: "Дискретне перетворення Фур'є",
+        data: dfts,
+        pointRadius: 0,
+        backgroundColor: ["rgba(0, 122, 255, 0.2)"],
+        borderColor: ["rgb(0, 122, 255)"],
+        borderWidth: 1,
       }
-    </script>
-  </body>
+
+      var fftDataset = {
+        label: "Швидке перетворення Фур'є",
+        data: ffts,
+        pointRadius: 0,
+        backgroundColor: ["rgba(0, 122, 255, 0.2)"],
+        borderColor: ["rgb(0, 122, 255)"],
+        borderWidth: 1,
+      }
+
+      var labels = signals.map((val, index) => String(index));
+      var dftLabels = signals.map((val, index) => String(index))
+
+      var signalsData = {
+        labels: labels,
+        datasets: [signalsXDataset],
+      };
+
+      var dftData = {
+        labels: dftLabels,
+        datasets: [dftDataset],
+      };
+
+      var fftData = {
+        labels: dftLabels,
+        datasets: [fftDataset],
+      };
+
+      var options = {
+        scales: {
+          xAxes: [
+            {
+              scaleLabel: {
+                display: true,
+                labelString: "t",
+              },
+            },
+          ],
+          yAxes: [
+            {
+              scaleLabel: {
+                display: true,
+                labelString: "x",
+              },
+            },
+          ],
+        },
+      };
+
+      var dtfOptions = {
+        scales: {
+          xAxes: [
+            {
+              scaleLabel: {
+                display: true,
+                labelString: "",
+              },
+            },
+          ],
+          yAxes: [
+            {
+              scaleLabel: {
+                display: true,
+                labelString: "",
+              },
+            },
+          ],
+        },
+      };
+
+      var fftOptions = {
+        scales: {
+          xAxes: [
+            {
+              scaleLabel: {
+                display: true,
+                labelString: "",
+              },
+            },
+          ],
+          yAxes: [
+            {
+              scaleLabel: {
+                display: true,
+                labelString: "",
+              },
+            },
+          ],
+        },
+      };
+
+      var signalsChart = new Chart(ctxSignals, {
+        type: "line",
+        data: signalsData,
+        options: options,
+      });
+
+      var dftChart = new Chart(ctxDFT, {
+        type: "line",
+        data: dftData,
+        options: dtfOptions,
+      });
+
+      var fftChart = new Chart(ctxFFT, {
+        type: "line",
+        data: fftData,
+        options: fftOptions,
+      });
+
+      return false;
+    }
+  </script>
+</body>
+
 </html>

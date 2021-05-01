@@ -25,28 +25,65 @@ const dispercy = (signals) => {
   return sum(signals.map((xt) => Math.pow(xt - mx, 2))) / (signals.length - 1);
 };
 
-const correlate = (x, y) => {
-  let Mx = average(x)
-  let My = average(y)
-  let n = x.length
+function complex(real, imag) {
+  return {
+    real: real,
+    imag: imag,
+  };
+}
 
-  // N - диапазон значений испытательного интервала, на конкретном значении которого,
-  // мы исследуем взаимное влияние. (по сколько это график R(tau)).
-  // Можно сделать предел равным длине сигнала - 1, меньшее значение было выбрано для удобства отображения.
-  // Следует помнить, что t у нас в диапазоне от 1 до длины сигнала - tau, 
-  // по сколько для второго сигнала будет сдвиг на tau, и нельзя выходить за пределы.
-
-  let N = x.length
-
-  let correlation = new Array(N)
-  correlation.fill(0)
-
-  for (let tau = 0; tau < N; tau++) {
-    for (let t = 1; t < n - tau; t++) {
-      correlation[tau] += (x[t] - Mx) * (y[t + tau] - My)
+function dft(samples) {
+  var len = samples.length;
+  var arr = Array(len);
+  var invlen = 1 / len;
+  for (var i = 0; i < len; i++) {
+    arr[i] = complex(0, 0);
+    for (var n = 0; n < len; n++) {
+      var theta = -Math.PI * 2 * i * n * invlen;
+      var costheta = Math.cos(theta);
+      var sintheta = Math.sin(theta);
+      if (samples[n].real == undefined) samples[n] = complex(samples[n], 0);
+      arr[i].real += samples[n].real * costheta - samples[n].imag * sintheta;
+      arr[i].imag += samples[n].real * sintheta + samples[n].imag * costheta;
     }
-    correlation[tau] *= 1/ (n - 1)
+  }
+  return arr;
+}
+
+function fft(samples) {
+  var len = samples.length;
+  var arr = Array(len);
+
+  if (len == 1) {
+    if (samples[0].real == undefined) return [complex(samples[0], 0)];
+    else return [complex(samples[0].real, samples[0].imag)];
   }
 
-  return correlation
+  let even = samples.filter((sample, index) => index % 2 == 0);
+  let odd = samples.filter((sample, index) => index % 2 == 1);
+
+  var arrEven = fft(even);
+  var arrOdd = fft(odd);
+
+  var invlen = 1 / len;
+
+  for (var k = 0; k < len / 2; k++) {
+    let temp = complex(0, 0);
+
+    var theta = -Math.PI * 2 * k * invlen;
+    var costheta = Math.cos(theta);
+    var sintheta = Math.sin(theta);
+
+    temp.real = arrOdd[k].real * costheta - arrOdd[k].imag * sintheta;
+    temp.imag = arrOdd[k].real * sintheta + arrOdd[k].imag * costheta;
+
+    arr[k] = complex(arrEven[k].real + temp.real, arrEven[k].imag + temp.imag);
+
+    arr[k + len / 2] = complex(
+      arrEven[k].real - temp.real,
+      arrEven[k].imag - temp.imag
+    );
+  }
+
+  return arr;
 }
