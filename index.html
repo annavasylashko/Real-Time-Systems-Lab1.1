@@ -28,12 +28,14 @@
   <canvas id="signals"></canvas>
   <canvas id="dft"></canvas>
   <canvas id="fft"></canvas>
+  <canvas id="diff"></canvas>
 
   <script>
     function fillChart() {
       var ctxSignals = document.getElementById("signals");
       var ctxDFT = document.getElementById("dft");
       var ctxFFT = document.getElementById("fft");
+      var ctxDiff = document.getElementById("diff");
 
       var n = document.getElementById("garmonic").value;
       var wl = document.getElementById("limitfrequency").value;
@@ -45,9 +47,11 @@
       var signals = generateRandomSignals(n, wl, N);
       var dfts = dft(signals.slice()).map((complexNumber) => Math.sqrt(complexNumber.real ** 2 + complexNumber.imag ** 2))
       var ffts = fft(signals.slice()).map((complexNumber) => Math.sqrt(complexNumber.real ** 2 + complexNumber.imag ** 2))
+      var diffs = dfts.map((value, i) => Math.round(((ffts[i] - value) + Number.EPSILON) * 100) / 100)
 
       console.log(dfts)
       console.log(ffts)
+      console.log(diffs)
 
       pAverage.innerHTML = `Математичне сподівання: ${average(signals)}`;
       pDispercy.innerHTML = `Дисперсія: ${dispercy(signals)}`;
@@ -79,8 +83,18 @@
         borderWidth: 1,
       }
 
+      var diffDataset = {
+        label: "Графік відхилення FFT і DFT",
+        data: diffs,
+        pointRadius: 0,
+        backgroundColor: ["rgba(0, 122, 255, 0.2)"],
+        borderColor: ["rgb(0, 122, 255)"],
+        borderWidth: 1,
+      }
+
       var labels = signals.map((val, index) => String(index));
       var dftLabels = signals.map((val, index) => String(index))
+      var diffLabels = signals.map((val, index) => String(index))
 
       var signalsData = {
         labels: labels,
@@ -95,6 +109,11 @@
       var fftData = {
         labels: dftLabels,
         datasets: [fftDataset],
+      };
+
+      var diffData = {
+        labels: diffLabels,
+        datasets: [diffDataset],
       };
 
       var options = {
@@ -160,6 +179,27 @@
         },
       };
 
+      var diffOptions = {
+        scales: {
+          xAxes: [
+            {
+              scaleLabel: {
+                display: true,
+                labelString: "",
+              },
+            },
+          ],
+          yAxes: [
+            {
+              scaleLabel: {
+                display: true,
+                labelString: "",
+              },
+            },
+          ],
+        },
+      };
+
       var signalsChart = new Chart(ctxSignals, {
         type: "line",
         data: signalsData,
@@ -176,6 +216,12 @@
         type: "line",
         data: fftData,
         options: fftOptions,
+      });
+
+      var diffChart = new Chart(ctxDiff, {
+        type: "line",
+        data: diffData,
+        options: diffOptions,
       });
 
       return false;
